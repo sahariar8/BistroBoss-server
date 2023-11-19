@@ -2,6 +2,11 @@ import express from 'express'
 import cors from 'cors'
 import 'dotenv/config'
 import jwt  from  'jsonwebtoken'
+//stripe
+import Stripe from 'stripe';
+const sk = process.env.STRIPE_SECRET_KEY;
+const stripeInstance = Stripe(sk);
+
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -135,6 +140,22 @@ async function run() {
         const query = { _id: new ObjectId(id) };
         const result = await cartCollection.deleteOne(query);
         res.send(result);
+      })
+
+      //payments
+
+      app.post('/create-payment-intent',async(req,res)=>{
+        const price = req.body;
+        const amount = parseInt(price *100);
+        const paymentIntent = await stripeInstance.paymentIntents.create({
+            amount:amount,
+            currency:'usd',
+            payment_method_types:['card']
+        });
+
+        res.send({
+          clientSecret:paymentIntent.client_secret
+        })
       })
 
       app.post('/users',async (req,res)=>{
