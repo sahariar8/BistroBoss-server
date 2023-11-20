@@ -236,7 +236,63 @@ async function run() {
       //MIDDLEWARE
 
   
-      //token related route
+      //admin-stats
+
+      app.get('/admin-stats',async(req,res)=>{
+
+        const totalUser = await userCollection.estimatedDocumentCount();
+        const totalMenu = await menuCollection.estimatedDocumentCount();
+        const totalOrder = await paymentCollection.estimatedDocumentCount();
+
+        const result = await paymentCollection.aggregate([
+          {
+            $group:{
+              _id:null,
+              totalRevenue:{
+                $sum:'$price'
+              }
+            }
+          }
+        ]).toArray();
+
+        const totalRevenue = result.length > 0 ? result[0].totalRevenue : 0 ;
+        const revenue = parseFloat(totalRevenue.toFixed(2));
+
+        res.send({
+          totalUser,totalMenu,totalOrder,revenue
+        });
+      })
+
+
+      //order-state aggregate 
+      app.get('/order-stats',async(req,res)=>{
+          const result = await paymentCollection.aggregate([
+           {
+              $unwind :'$menuItemIds'
+           }
+        
+          //  {
+          //     $lookup:{
+          //         from:'menu',
+          //         localField:'menuItemIds',
+          //         foreignField:'_id',
+          //         as:'items'
+          //     }
+          //  },
+          //  {
+          //     $unwind :'$menuItems'
+          //  },
+          //  {
+          //     $group:{
+          //       _id:'$menuItems.category',
+          //       quantity:{$sum:1},
+          //       revenue:{ $sum:'$menuItems.price'}
+
+          //     }
+          //  }
+          ]).toArray();
+          res.send(result);
+      })
 
      
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
