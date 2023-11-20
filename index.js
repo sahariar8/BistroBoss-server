@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { query } from 'express'
 import cors from 'cors'
 import 'dotenv/config'
 import jwt  from  'jsonwebtoken'
@@ -33,6 +33,7 @@ async function run() {
       const reviewCollection = client.db('bistrobossDB').collection('reviews');
       const cartCollection = client.db('bistrobossDB').collection('carts');
       const userCollection = client.db('bistrobossDB').collection('users');
+      const paymentCollection = client.db('bistrobossDB').collection('payments');
 
     //middleware
     app.post('/jwt', async(req,res)=>{
@@ -144,9 +145,11 @@ async function run() {
 
       //payments
 
-      app.post('/create-payment-intent',async(req,res)=>{
-        const price = req.body;
-        const amount = parseInt(price *100);
+      app.post('/create-payment-intent',async (req,res)=>{
+        const {price} = req.body;
+        console.log(price)
+        const amount = parseInt(price * 100);
+        console.log('amount inside the intent',amount)
         const paymentIntent = await stripeInstance.paymentIntents.create({
             amount:amount,
             currency:'usd',
@@ -156,6 +159,28 @@ async function run() {
         res.send({
           clientSecret:paymentIntent.client_secret
         })
+      })
+
+      app.post('/payments',async(req,res)=>{
+        const payment = req.body;
+        const paymentResult = await paymentCollection.insertOne(payment);
+        // delete item from the cart
+        console.log("payment info",payment)
+        const query = { _id : {
+          $in : payment.cartIds.map( id => new ObjectId(id) )
+        } };
+        const deleteResult = await cartCollection.deleteMany(query);
+        console.log('deleted result',deleteResult);
+        res.send( {paymentResult, deleteResult})
+      })
+
+      app.get('/payments/:email',verifyToken, async(req,res)=>{
+        const query = {email:req.params.email};
+        if(req.params.email !== req.decoded.email){
+          return res.status(403).send('Forbidden Access');
+        }
+        const result = await paymentCollection.find(query).toArray();
+        res.send(result);
       })
 
       app.post('/users',async (req,res)=>{
