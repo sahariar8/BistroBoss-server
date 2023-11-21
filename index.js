@@ -265,34 +265,46 @@ async function run() {
 
 
       //order-state aggregate 
-      app.get('/order-stats',async(req,res)=>{
-          const result = await paymentCollection.aggregate([
-           {
-              $unwind :'$menuItemIds'
-           }
+      // app.get('/order-stats',async(req,res)=>{
+      //     const result = await paymentCollection.aggregate([
+      //       {
+      //         $addFields: {
+      //           menuItemIdsAsObjectId: {
+      //             $map: {
+      //               input: '$menuItemIds',
+      //               as: 'menuItemId',
+      //               in: { $toObjectId: '$$menuItemId' }
+      //             }
+      //           }
+      //         }
+      //       },
+      //      {
+      //         $unwind :'$menuItemIdsAsObjectId'
+      //      },
         
-          //  {
-          //     $lookup:{
-          //         from:'menu',
-          //         localField:'menuItemIds',
-          //         foreignField:'_id',
-          //         as:'items'
-          //     }
-          //  },
-          //  {
-          //     $unwind :'$menuItems'
-          //  },
-          //  {
-          //     $group:{
-          //       _id:'$menuItems.category',
-          //       quantity:{$sum:1},
-          //       revenue:{ $sum:'$menuItems.price'}
+      //      {
+      //         $lookup:{
+      //             from:'menu',
+      //             localField:'menuItemIdsAsObjectId',
+      //             foreignField:'_id',
+      //             as:'items'
+      //         }
+      //      },
+      //      {
+      //         $unwind :'$menuItems'
+      //      },
+      //      {
+      //         $group:{
+      //           _id:'$menuItems.category',
+      //           quantity:{$sum:1},
+      //           revenue:{ $sum:'$menuItems.price'}
 
-          //     }
-          //  }
-          ]).toArray();
-          res.send(result);
-      })
+      //         }
+      //      }
+      //     ]).toArray();
+      //     res.send(result);
+    
+      // })
 
      
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
